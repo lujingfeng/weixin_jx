@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+  "name": "weixin_js",
+
+  "description": "删除僵尸粉",
+  "version": "1.0",
+  "content_scripts": [
+    {
+      "matches": ["https://wx.qq.com/*"],
+      "js": ["plugin.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    "script_in_context.js"
+  ]
+}
