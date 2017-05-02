@@ -14,21 +14,30 @@ XMLHttpRequest.prototype.send = function(){
     if(this.readyState == 4 && this.status == 200){
       if(this.responseURL.indexOf('webwxgetcontact') >-1){
         var json = JSON.parse(this.responseText);
-        menberList = json.MemberList;
+        menberList = json.MemberList||[];
+        menberList = menberList.filter(function(item){
+          return item.AttrStatus > 100;
+        });
         createChatRoom();
       }
     }
   });
 }
 
+var failedList = [];
+var corpseList = [];//僵尸粉列表
+var timestamp = 15 * 1000;
+
 function createChatRoom(){
-  var inviteList = menberList.filter(function(item){
-    return item.AttrStatus > 100;
-  });
-
-  inviteList = inviteList.slice(0, 2);
-
+  if(menberList.length <= 0){
+    console.log('corpseList=', corpseList);
+    return;
+  }
+    
+  var userMap = {};
+  var inviteList = menberList.length > 30 ? menberList.splice(0, 30) : menberList;
   inviteList = inviteList.map(function(item){
+    userMap[item.UserName] = item;
     return {
       UserName: item.UserName
     }
@@ -38,8 +47,8 @@ function createChatRoom(){
 
   var json = {
     BaseRequest: BaseRequest,
-    MemberCount: 2,
-    MemberList: [{UserName: '@6b063d6557c2d4ff4ca9b8f17a21741b'}, {UserName: '@589aecdcdd1b2bfe3786480640f4d90230fcd02c542273628d690f29ca939e7d'}],
+    MemberCount: inviteList.length,
+    MemberList: inviteList,
     Topic: ''
   };
 
@@ -47,6 +56,30 @@ function createChatRoom(){
   xhr.open('post','https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxcreatechatroom?r='+Date.now());
   xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
   xhr.send(JSON.stringify(json));
+  xhr.onreadystatechange = function(event){
+    if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+      var resJson = JSON.parse(xhr.responseText);
+      if(resJson.BaseResponse.Ret !== 0){
+        failedList = failedList.concat(inviteList);
+        setTimeout(createChatRoom, timestamp);
+      }else{
+        setTimeout(createChatRoom, timestamp);
+        var mlist = resJson.MemberList || [];
+        mlist = mlist.map(function(item){
+          var origin = userMap[item.UserName];
+          if(!item.NickName){
+            origin.NickName = '';
+          }
+          return origin
+        });
+        corpseList = corpseList.concat(mlist.filter(function(m){
+          return !m.NickName
+        }));
+      }
+    }else if(xhr.readyState == XMLHttpRequest.DONE && xhr.status != 200){
+      setTimeout(createChatRoom, timestamp);
+    }
+  }
 }
 
 
