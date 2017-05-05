@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "weixin_js",
+  "name": "找微信僵尸粉",
 
   "description": "删除僵尸粉",
   "version": "1.0",

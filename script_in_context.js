@@ -26,7 +26,7 @@ XMLHttpRequest.prototype.send = function(){
 
 var failedList = [];
 var corpseList = [];//僵尸粉列表
-var timestamp = 15 * 1000;
+var timestamp = 60 * 1000;
 
 function createChatRoom(){
   if(menberList.length <= 0){
@@ -35,7 +35,7 @@ function createChatRoom(){
   }
     
   var userMap = {};
-  var inviteList = menberList.length > 30 ? menberList.splice(0, 30) : menberList;
+  var inviteList = menberList.length > 20 ? menberList.splice(0, 20) : menberList;
   inviteList = inviteList.map(function(item){
     userMap[item.UserName] = item;
     return {
@@ -56,6 +56,7 @@ function createChatRoom(){
   xhr.open('post','https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxcreatechatroom?r='+Date.now());
   xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
   xhr.send(JSON.stringify(json));
+  
   xhr.onreadystatechange = function(event){
     if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
       var resJson = JSON.parse(xhr.responseText);
